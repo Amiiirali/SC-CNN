@@ -64,7 +64,7 @@ def divide_task_for_multiprocess(num_process, names, roots, image_dir_path,
 
     if len(names)%num_process != 0:
 
-        num = len(imgs_path)%num_process
+        num = len(names)%num_process
 
         image_path  = np.repeat(image_dir_path, num)
         center_path = np.repeat(center_dir_path, num)

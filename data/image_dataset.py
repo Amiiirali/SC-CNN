@@ -36,10 +36,17 @@ class CenterDataset(object):
 
         # load all image files, sorting them to
         total_num = len(list(os.listdir(self.Image_path)))
+        print(20*'*')
+        print(list(sorted(os.listdir(self.Center_path), key=lambda x:x[:-4])))
+        print(20*'*')
+        print(list(sorted(os.listdir(self.Image_path), key=lambda x:x[:-4])))
+        print(20*'*')
+        print(list(sorted(os.listdir(self.Stain_path), key=lambda x:x[:-10])))
+        print(20*'*')
 
-        for idx, (img_name, stain_name, center_file) in enumerate(zip(list(sorted(os.listdir(self.Image_path))),
-                                                                      list(sorted(os.listdir(self.Stain_path))),
-                                                                      list(sorted(os.listdir(self.Center_path)))
+        for idx, (img_name, stain_name, center_file) in enumerate(zip(list(sorted(os.listdir(self.Image_path), key=lambda x:x[:-4])),
+                                                                      list(sorted(os.listdir(self.Stain_path), key=lambda x:x[:-10])),
+                                                                      list(sorted(os.listdir(self.Center_path), key=lambda x:x[:-4]))
                                                                       )):
 
             # Check if the img and the centers are for same file
