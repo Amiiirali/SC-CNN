@@ -144,7 +144,7 @@ def read_center_txt(text_file):
     for idx, line in enumerate(lines):
 
         numbers = line[1:-1].split(',')
-        x = int(numbers[0]) ; y = int(numbers[1])
+        x = int(float(numbers[0])) ; y = int(float(numbers[1]))
         centers[idx][0] = x ; centers[idx][1] = y
 
     return centers
@@ -501,13 +501,12 @@ def save_model(epoch, model, optimizer, scheduler, val_loss, save_name):
                 'loss'                : val_loss
                 }, save_name)
 
-    print('**********************************')
+    print('\n **********************************')
     print('* Finding Better Model --> Save  *')
-    print('**********************************')
-    print()
+    print('**********************************\n')
 
 
-def load_model(load_flag, load_path, model, optimizer, scheduler):
+def load_model(load_path, model, optimizer, scheduler):
 
     '''
     This function loads the previous best model.
@@ -529,7 +528,7 @@ def load_model(load_flag, load_path, model, optimizer, scheduler):
                 Validation loss of previous model.
     '''
 
-    if load_flag:
+    if load_path is not None:
 
         if torch.cuda.is_available():
             checkpoint = torch.load(load_path)
@@ -543,13 +542,19 @@ def load_model(load_flag, load_path, model, optimizer, scheduler):
         loaded_checkpoint = OrderedDict()
 
         for k, v in checkpoint['model_state_dict'].items():
-            name = k[:7]
-            if name!='module.':
+            # name = k[:7]
+            # if name!='module.':
+            if 'module.' in k:
                 flag=False
 
-        if flag and torch.cuda.device_count() <= 1:
+        if not flag and torch.cuda.device_count() <= 1:
             for k, v in checkpoint['model_state_dict'].items():
-                name = k[7:] # remove 'module.' of dataparallel
+                name = k.replace('module.', '') # remove 'module.' of dataparallel
+                loaded_checkpoint[name] = v
+
+        elif flag and torch.cuda.device_count() > 1:
+            for k, v in checkpoint['model_state_dict'].items():
+                name = 'module.' + k
                 loaded_checkpoint[name] = v
         else:
             loaded_checkpoint = checkpoint['model_state_dict']

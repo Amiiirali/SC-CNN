@@ -18,18 +18,16 @@ def dataset():
     root        = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     dataset_dir = os.path.join(root, cfg.dataset_path)
 
-    print(dataset_dir)
-
     # If the data is not downloaded yet
     # if not os.path.isdir(dataset_dir):
-    if os.path.isdir(dataset_dir):
+    if not os.path.isdir(dataset_dir):
 
         print(20 * '*')
         print(f"Dataset is Downloading ... \n")
 
-        # os.mkdir(dataset_dir)
+        os.mkdir(dataset_dir)
 
-        # download_dataset(cfg.url, dataset_dir)
+        download_dataset(cfg.url, dataset_dir)
         # multiprocessing.cpu_count()
         load_dataset(1,
                      dataset_dir,

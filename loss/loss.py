@@ -67,7 +67,7 @@ class BCE_Loss(torch.autograd.Function):
         # SC-CNN version
         # Modification with source code
         #######
-
+        eps = 2.2204e-16
         temp_x   = 1 / (x+eps)
         temp_1_x = 1 / (1-x+eps)
 

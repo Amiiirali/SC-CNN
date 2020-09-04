@@ -1,16 +1,17 @@
 import torch
 import torch.nn as nn
 import torchvision
+
 from torchsummary import summary
 
 import os
-from data.image_dataset import CenterDataset
-from model.SC_CNN import SC_CNN
-from model.SC_CNN_v2 import SC_CNN_v2
-from model.HeatMap import HeatMap
 import other.utils as utils
-from other.functions import train_model
 from loss.loss import BCE_Loss
+from model.SC_CNN import SC_CNN
+from model.HeatMap import HeatMap
+from model.SC_CNN_v2 import SC_CNN_v2
+from other.functions import train_model
+from data.image_dataset import CenterDataset
 
 
 def train(arg):
@@ -18,12 +19,13 @@ def train(arg):
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     root = os.path.realpath(__file__)[:-8]
+
     # use our dataset and defined transformations
     print(20 * '*')
     print('Loading the Dataset:')
-    dataset = CenterDataset(root, patch_size=arg.patch_size,
-                            stride_size=arg.stride_size, d=arg.d,
-                            out_size=arg.heatmap_size, version=arg.version)
+
+    dataset = CenterDataset(root,
+                            arg)
 
     # print('\n' * 1)
     # print(20 * '*')
@@ -32,7 +34,7 @@ def train(arg):
 
     # split the dataset in train and valid set
     torch.manual_seed(1)
-    indices = torch.randperm(len(dataset)).tolist()
+    indices       = torch.randperm(len(dataset)).tolist()
     dataset_train = torch.utils.data.Subset(dataset, indices[:
                                             -int(len(indices)*arg.valid_coeff)])
     dataset_valid = torch.utils.data.Subset(dataset, indices[
@@ -46,23 +48,25 @@ def train(arg):
     print("Total number of validation data is:", len(dataset_valid))
 
     # define training and validation data loaders
-    train_data_loader = torch.utils.data.DataLoader(
-        dataset_train, batch_size=arg.batch_size, shuffle=True, num_workers=4
-        )
+    train_data_loader = torch.utils.data.DataLoader(dataset_train,
+                                                    batch_size=arg.batch_size,
+                                                    shuffle=True,
+                                                    num_workers=4)
 
-    valid_data_loader = torch.utils.data.DataLoader(
-        dataset_valid, batch_size=arg.batch_size, shuffle=True, num_workers=4
-        )
+    valid_data_loader = torch.utils.data.DataLoader(dataset_valid,
+                                                    batch_size=arg.batch_size,
+                                                    shuffle=True,
+                                                    num_workers=4)
 
-    # data_loader_test = torch.utils.data.DataLoader(
-    #     dataset_test, batch_size=1, shuffle=False, num_workers=4,
-    #     )
+    dataLoaders   = {
+                     'Train'     : train_data_loader,
+                     'Validation': valid_data_loader
+                     }
 
-    dataLoaders = {
-            'Train': train_data_loader,
-            'Validation': valid_data_loader,
-            # 'Test': test_loader,
-            }
+    dataset_sizes = {
+                     'Train'     : len(dataset_train),
+                     'Validation': len(dataset_valid)
+                     }
 
     if arg.version==0 or arg.version==1:
         # get the original model
@@ -90,14 +94,17 @@ def train(arg):
 
 
     # construct an optimizer
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=arg.lr, momentum=arg.momentum,
+    params    = [p for p in model.parameters() if p.requires_grad]
+
+    optimizer = torch.optim.SGD(params,
+                                lr=arg.lr,
+                                momentum=arg.momentum,
                                 weight_decay=0.0005)
 
     # learning rate scheduler
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                   milestones=[60,100],
-                                                   gamma=0.1)
+                                                        milestones=[60,100],
+                                                        gamma=0.1)
 
 
     ###########################################
@@ -111,13 +118,18 @@ def train(arg):
     criterion = BCE_Loss.apply
 
     # Validation criterion
-    val_criterion = nn.MSELoss(reduction='none')
+    validation_criterion = nn.MSELoss(reduction='none')
 
     print()
     print(20 * '*')
-    print('Training Starts:')
+    print('Training Starts: \n')
     # Training
-    train_model(model, Map, dataLoaders, criterion, val_criterion, optimizer,
-                lr_scheduler, arg.epoch, d=arg.d, out_size=arg.heatmap_size,
-                save_name=root+arg.save_name , load_flag=arg.load_flag,
-                load_name=root+arg.load_name, version=arg.version)
+    train_model(model,
+                dataLoaders,
+                dataset_sizes,
+                Map,
+                criterion,
+                validation_criterion,
+                optimizer,
+                lr_scheduler,
+                arg)

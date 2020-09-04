@@ -16,7 +16,7 @@ AIM Lab
 import os
 from other.parser import parse_input
 from dataset.dataset import dataset
-# from train import train
+from train import train
 # from test import test
 
 if __name__ == "__main__":
@@ -26,8 +26,8 @@ if __name__ == "__main__":
     # Download dataset
     dataset()
 
-    # if arg.mode == 'train':
-    #     train(arg)
+    if arg.mode == 'train':
+        train(arg)
     #
     # if arg.mode == 'test':
     #     test(arg)

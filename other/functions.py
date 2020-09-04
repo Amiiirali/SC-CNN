@@ -5,26 +5,24 @@ import time
 import other.utils as utils
 
 
-def train_model(model, Map, dataLoaders, criterion, val_criterion, optimizer,
-                scheduler, num_epochs, d, out_size, save_name, load_flag,
-                load_name, version):
-
+def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
+                validation_criterion, optimizer, scheduler, arg):
 
     since = time.time()
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # load model
-    start_epoch, best_loss, model, optimizer, scheduler = utils.load_model(load_flag, load_name,
-                                                                           model, optimizer, scheduler)
+    start_epoch, best_loss, model, optimizer, scheduler = utils.load_model(arg.load_name,
+                                                                           model,
+                                                                           optimizer,
+                                                                           scheduler)
 
-    for epoch in range(start_epoch, num_epochs):
+    for epoch in range(start_epoch, arg.epoch):
 
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-        print('-' * 10)
+        print('Epoch {}/{}'.format(epoch, arg.epoch - 1))
+        print('-' * 10, "\n")
 
-        # Each epoch has a training and validation phase
-        val_loss   = 0.0
-        train_loss = 0.0
+        running_loss = 0.0
 
         for phase in ['Train', 'Validation']:
 
@@ -40,16 +38,20 @@ def train_model(model, Map, dataLoaders, criterion, val_criterion, optimizer,
             for inputs, heatmaps, epsilons in dataLoaders[phase]:
 
                 inputs, heatmaps, epsilons = inputs.to(device), heatmaps.to(device), epsilons.to(device)
-
                 # forward
                 points, h_value = model(inputs)
 
                 ############################    Auto Grad by me   #######################################
-                predicted = Map(points, h_value, device, d, out_size, version)
+                predicted = Map(points,
+                                h_value,
+                                device,
+                                arg.d,
+                                arg.heatmap_size,
+                                arg.version)
 
                 ############################ Auto Grad by Pytorch #######################################
-                # predicted = utils.heat_map_tensor(points, h_value, device, d, out_size)
-                # predicted = utils.heat_map_tensor_version2(points, h_value, device, d, out_size)
+                # predicted = utils.heat_map_tensor(points, h_value, device, arg.d, arg.out_size)
+                # predicted = utils.heat_map_tensor_version2(points, h_value, device, arg.d, arg.out_size)
 
                 predicted = predicted.view(predicted.shape[0], -1)
                 heatmaps  = heatmaps.view(heatmaps.shape[0], -1)
@@ -69,54 +71,56 @@ def train_model(model, Map, dataLoaders, criterion, val_criterion, optimizer,
 
                     ###############################################
                     # SC_CNN
-                    weight_loss = criterion(predicted, heatmaps, weights)
+                    weight_loss = criterion(predicted,
+                                            heatmaps,
+                                            weights)
 
                     # Sum over one data
                     # Average over different data
-                    sum_loss = torch.sum(weight_loss, dim=1)
-                    # avg_loss = torch.mean(sum_loss)
-                    avg_loss = torch.sum(sum_loss)
-
-                    # Just for having understanding what is happening
-                    train_loss += avg_loss.item()
+                    loss = torch.sum(weight_loss, dim=1)
+                    loss = torch.mean(loss)
+                    # avg_loss = torch.sum(sum_loss)
 
                 else:
 
-                    loss = val_criterion(predicted, heatmaps)
-                    RMSE = torch.sqrt(loss)
-                    RMSE = torch.sum(RMSE, dim=1)
-                    # RMSE = torch.mean(RMSE)
-                    RMSE = torch.sum(RMSE)
+                    loss = validation_criterion(predicted,
+                                                heatmaps)
+                    loss = torch.sqrt(loss)
+                    loss = torch.sum(loss, dim=1)
+                    loss = torch.mean(loss)
+                    # loss = torch.sum(loss)
 
-                    val_loss += RMSE.item()
-
+                running_loss += loss.item() * inputs.shape[0]
 
                 if phase == 'Train':
 
                     # Zero the parameter gradients
                     optimizer.zero_grad()
                     # Calculate gradient respect to parameters
-                    avg_loss.backward()
+                    loss.backward()
                     # Update parameters
                     optimizer.step()
 
                 # Empty Catch
                 torch.cuda.empty_cache()
-        
-        if phase == 'Train':
-                scheduler.step()
-            
-        print()
-        if val_loss < best_loss:
 
-            best_loss = val_loss
-            # Save the best model
-            utils.save_model(epoch, model, optimizer, scheduler, val_loss,
-                             save_name)
+            epoch_loss = running_loss / dataset_sizes[phase]
 
+            print(f"{phase} -> Loss: {epoch_loss}")
 
-        print('Training Loss is:', train_loss, ' and Validation Loss is:', val_loss)
-        print()
+            if phase == 'Train':
+                    scheduler.step()
+
+            if phase == 'Validation' and epoch_loss < best_loss:
+
+                best_loss = epoch_loss
+                # Save the best model
+                utils.save_model(epoch,
+                                 model,
+                                 optimizer,
+                                 scheduler,
+                                 epoch_loss,
+                                 arg.save_name)
 
 
     time_elapsed = time.time() - since
