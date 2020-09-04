@@ -40,7 +40,6 @@ def process(name, root, image_dir, center_dir, stain_dir):
     stain_path = os.path.join(stain_dir, name + '_stain.png')
     cv2.imwrite(stain_path, H_Channel)
 
-
 def divide_task_for_multiprocess(num_process, names, roots, image_dir_path,
                                  center_dir_path, stain_dir_path):
 
