@@ -145,7 +145,8 @@ def read_center_txt(text_file):
 
         numbers = line[1:-1].split(',')
         x = int(float(numbers[0])) ; y = int(float(numbers[1]))
-        centers[idx][0] = x ; centers[idx][1] = y
+        # centers[idx][0] = x ; centers[idx][1] = y
+        centers[idx][0] = y ; centers[idx][1] = x
 
     return centers
 
@@ -499,9 +500,9 @@ def save_model(epoch, model, optimizer, scheduler, val_loss, save_name):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
                 'loss'                : val_loss
-                }, save_name)
+                }, f"{save_name}+.pt")
 
-    print('\n **********************************')
+    print('\n**********************************')
     print('* Finding Better Model --> Save  *')
     print('**********************************\n')
 

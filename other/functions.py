@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import torch
 import time
 import other.utils as utils
+from torch.utils.tensorboard import SummaryWriter
 
 
 def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
@@ -10,6 +11,7 @@ def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
 
     since = time.time()
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    writer = SummaryWriter(log_dir=arg.log_dir)
 
     # load model
     start_epoch, best_loss, model, optimizer, scheduler = utils.load_model(arg.load_name,
@@ -66,14 +68,14 @@ def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
 
                     ###############################################
                     # BCE
-                    # loss = criterion(predicted, heatmaps)
-                    # weight_loss = loss * weights
+                    loss = criterion(predicted, heatmaps)
+                    weight_loss = loss * weights
 
                     ###############################################
                     # SC_CNN
-                    weight_loss = criterion(predicted,
-                                            heatmaps,
-                                            weights)
+                    # weight_loss = criterion(predicted,
+                    #                         heatmaps,
+                    #                         weights)
 
                     # Sum over one data
                     # Average over different data
@@ -106,7 +108,14 @@ def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
 
             epoch_loss = running_loss / dataset_sizes[phase]
 
-            print(f"{phase} -> Loss: {epoch_loss}")
+            print(f"{phase} -> Loss: {epoch_loss}", flush=True)
+
+            writer.add_scalars(f"{arg.save_name}/loss",
+                               {
+                               f"{phase}": epoch_loss
+                               },
+                               epoch)
+            writer.flush()
 
             if phase == 'Train':
                     scheduler.step()
@@ -122,7 +131,7 @@ def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
                                  epoch_loss,
                                  arg.save_name)
 
-
+    writer.close()
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
            time_elapsed // 60, time_elapsed % 60))

@@ -28,6 +28,6 @@ if __name__ == "__main__":
 
     if arg.mode == 'train':
         train(arg)
-    #
-    # if arg.mode == 'test':
-    #     test(arg)
+
+    if arg.mode == 'test':
+        test(arg)

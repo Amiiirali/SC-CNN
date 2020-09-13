@@ -62,11 +62,18 @@ class SC_CNN(nn.Module):
         torch.nn.init.constant_(self.S1_h[0].bias, 0)
 
         # Weights
+        SEED = 256
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.conv_1[0].weight, mean=0.0, std=0.01)
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.conv_2[0].weight, mean=0.0, std=0.01)
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.fc_1[0].weight, mean=0.0, std=0.01)
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.fc_2[0].weight, mean=0.0, std=0.01)
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.S1_point[0].weight, mean=0.0, std=0.01)
+        torch.manual_seed(SEED)
         torch.nn.init.normal_(self.S1_h[0].weight, mean=0.0, std=0.01)
 
 

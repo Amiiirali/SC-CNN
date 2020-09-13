@@ -17,8 +17,12 @@ from data.image_dataset import CenterDataset
 def train(arg):
 
     # train on the GPU or on the CPU, if a GPU is not available
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    root = os.path.realpath(__file__)[:-8]
+    device      = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    root        = os.path.dirname(os.path.realpath(__file__))
+    arg.log_dir = os.path.join(root, arg.log_dir)
+
+    if not os.path.isdir(arg.log_dir):
+        os.mkdir(arg.log_dir)
 
     # use our dataset and defined transformations
     print(20 * '*')
@@ -110,12 +114,12 @@ def train(arg):
     ###########################################
     # This is Pytorch loss function
     # BCE
-    # criterion = nn.BCELoss(reduction='none')
+    criterion = nn.BCELoss(reduction='none')
 
     ###########################################
     # This is my own written loss function
     # SCCNN
-    criterion = BCE_Loss.apply
+    # criterion = BCE_Loss.apply
 
     # Validation criterion
     validation_criterion = nn.MSELoss(reduction='none')

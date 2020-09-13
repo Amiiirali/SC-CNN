@@ -59,9 +59,11 @@ def parse_input():
     parser.add_argument('--save_name', type=str, default='CellPoint.pt', help=""
                         "Name of the saved weights""")
 
-
     parser.add_argument('--load_name', type=str, help=""
                         "Name of the loaded weights""")
+
+    parser.add_argument('--log_dir', type=str, help=""
+                        "Name of the directory of logs""")
 
     args = parser.parse_args()
 

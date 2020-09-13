@@ -22,7 +22,7 @@ def dataset():
     if not os.path.isdir(dataset_dir):
 
         print(20 * '*')
-        print(f"Dataset is Downloading ... \n")
+        print(f"Dataset is Downloading ... \n", flush=True)
 
         os.mkdir(dataset_dir)
 
@@ -37,4 +37,4 @@ def dataset():
     else:
 
         print(20 * '*')
-        print(f"Dataset Exists \n")
+        print(f"Dataset Exists \n", flush=True)

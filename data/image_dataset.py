@@ -34,16 +34,6 @@ class CenterDataset(object):
         utils.delete_file(self.Center_path, '.DS_Store')
         utils.delete_file(self.Stain_path, '.DS_Store')
 
-        # load all image files, sorting them to
-        total_num = len(list(os.listdir(self.Image_path)))
-        print(20*'*')
-        print(list(sorted(os.listdir(self.Center_path), key=lambda x:x[:-4])))
-        print(20*'*')
-        print(list(sorted(os.listdir(self.Image_path), key=lambda x:x[:-4])))
-        print(20*'*')
-        print(list(sorted(os.listdir(self.Stain_path), key=lambda x:x[:-10])))
-        print(20*'*')
-
         for idx, (img_name, stain_name, center_file) in enumerate(zip(list(sorted(os.listdir(self.Image_path), key=lambda x:x[:-4])),
                                                                       list(sorted(os.listdir(self.Stain_path), key=lambda x:x[:-10])),
                                                                       list(sorted(os.listdir(self.Center_path), key=lambda x:x[:-4]))
@@ -89,9 +79,6 @@ class CenterDataset(object):
             self.heat_maps.extend(h_map)
 
             self.epsilons += epsilon
-
-            # print(idx+1, 'from', total_num, 'Images are Loaded!' ,
-            #       sep=' ', end='\r', flush=True)
 
 
     def __getitem__(self, idx):
