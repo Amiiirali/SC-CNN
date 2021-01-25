@@ -17,7 +17,7 @@ import os
 from other.parser import parse_input
 from dataset.dataset import dataset
 from train import train
-# from test import test
+from test import test
 
 if __name__ == "__main__":
 

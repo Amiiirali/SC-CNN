@@ -59,10 +59,12 @@ def patch_extraction(img, H_Channel, patch, stride, version):
                 coordinates of patches in original image.
     '''
 
-    assert img.shape[0]==H_Channel.shape[0] or img.shape[1]==H_Channel.shape[1], "The Image shape is {} and Gray H-Channel shape is {} which are not same!".format(img.shape, gray_H.shape)
+    assert img.shape[0]==H_Channel.shape[0] or img.shape[1]==H_Channel.shape[1], "The image's shape is {}, and the gray H-Channel's shape is {} which are not same!".format(img.shape, gray_H.shape)
     # gray --> change it to have a channel
     if len(img.shape) < 3:
         img = img.reshape((img.shape[0], img.shape[1], 1))
+    if img.shape[2] > 3:
+        img = img[:,:,:3]
 
     gray_H = cv2.cvtColor(H_Channel, cv2.COLOR_BGR2GRAY)
     gray_H = gray_H.reshape((gray_H.shape[0], gray_H.shape[1], 1))
@@ -189,13 +191,14 @@ def find_out_coords(coord, patch_size, out_size):
     return start_H, end_H, start_W, end_W
 
 
-def center_extraction(centers, coords, patch_size, out_size):
+def center_extraction(centers, coords):
 
     '''
     This function extracts the centers which place in the output window of
     the patch. For example, if the patch size is [27*27] and the output size is
     [11, 11], this functions extracts the centers that are in the [11*11] window
     of the patch.
+    ** Update: The center should be in [27*27] not [11*11] **
 
     Input:
           1- coord:
@@ -217,12 +220,6 @@ def center_extraction(centers, coords, patch_size, out_size):
     patch_centers = list()
 
     for i in range(len(coords)):
-
-        # start_H, end_H, start_W, end_W = find_out_coords(coords[i], patch_size,
-        #                                                  out_size)
-        #
-        # patch_center =  [point for point in centers if point[0] > start_H and
-        #                  point[0] < end_H and point[1] > start_W and point[1] < end_W]
 
         [[start_x, start_y],
          [end_x, end_y]] = coords[i]
@@ -285,7 +282,8 @@ def heat_map(patch_centers, coords, d, patch_size, out_size):
 
     for idx, coord in enumerate(coords):
 
-        start_H, end_H, start_W, end_W = find_out_coords(coord, patch_size,
+        start_H, end_H, start_W, end_W = find_out_coords(coord,
+                                                         patch_size,
                                                          out_size)
         if len(patch_centers[idx]) == 0:
             out = np.zeros((H_prime, W_prime))
@@ -530,7 +528,6 @@ def load_model(load_path, model, optimizer, scheduler):
     '''
 
     if load_path is not None:
-
         if torch.cuda.is_available():
             checkpoint = torch.load(load_path)
 

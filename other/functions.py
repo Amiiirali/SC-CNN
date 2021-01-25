@@ -3,7 +3,9 @@ from __future__ import print_function, division
 import torch
 import time
 import other.utils as utils
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
+from dataset.ColorNormalization import steinseperation
 
 
 def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
@@ -136,3 +138,57 @@ def train_model(model, dataLoaders, dataset_sizes, Map, criterion,
     print('Training complete in {:.0f}m {:.0f}s'.format(
            time_elapsed // 60, time_elapsed % 60))
     print('Best loss: {:4f}'.format(best_loss))
+
+
+
+def test_model(image_path, data, model, arg):
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    img_transform = utils.transform(arg.version)
+    model.train(False)
+
+    _, _, _, stain, _ = steinseperation.stainsep(image_path)
+    H_Channel = stain[0]
+
+    cropped, coords = utils.patch_extraction(data,
+                                             H_Channel,
+                                             arg.patch_size,
+                                             arg.stride_size,
+                                             arg.version)
+
+    H, W, _ = data.shape
+    cell    = np.zeros((H, W))
+    count   = np.zeros((H, W))
+
+    [H_prime, W_prime] = arg.heatmap_size
+
+    for img, coord in zip(cropped, coords):
+
+        img = img_transform(np.uint8(img))
+        img = img.float()
+        img = img.to(device)
+        img = img.unsqueeze(0)
+
+        point, h = model(img)
+
+        heat_map = utils.heat_map_tensor(point.view(-1, 2),
+                                         h.view(-1, 1),
+                                         device,
+                                         arg.d,
+                                         arg.heatmap_size)
+        heatmap  = heat_map.cpu().detach().numpy().reshape((H_prime, W_prime))
+
+        start_H, end_H, start_W, end_W = utils.find_out_coords(coord,
+                                                               arg.patch_size,
+                                                               arg.heatmap_size)
+
+        cell[start_H:end_H, start_W:end_W] += heatmap
+
+        idx = np.argwhere(heatmap != 0)
+        count[idx[:,0]+start_H, idx[:,1]+start_W] += 1
+
+    count[count==0] = 1
+    cell = np.divide(cell, count)
+
+    return cell

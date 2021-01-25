@@ -16,7 +16,7 @@ import cv2
 import dataset.ColorNormalization.functions as functions
 
 
-def stainsep(image_path, nstains, lambda1):
+def stainsep(image_path, nstains=2, lambda1=0.02):
 
     image = cv2.imread(image_path)
 

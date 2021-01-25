@@ -23,11 +23,11 @@ class CenterDataset(object):
         self.out_size  = arg.heatmap_size
         self.transform = utils.transform(arg.version)
 
-        self.dataset_dir = os.path.join(root, cfg.dataset_path )
+        self.dataset_dir = os.path.join(root, cfg.dataset_path)
 
-        self.Image_path  = os.path.join(self.dataset_dir, cfg.image_path )
-        self.Center_path = os.path.join(self.dataset_dir, cfg.center_path )
-        self.Stain_path  = os.path.join(self.dataset_dir, cfg.stain_path )
+        self.Image_path  = os.path.join(self.dataset_dir, cfg.image_path)
+        self.Center_path = os.path.join(self.dataset_dir, cfg.center_path)
+        self.Stain_path  = os.path.join(self.dataset_dir, cfg.stain_path)
 
         # MacOS thing :)
         utils.delete_file(self.Image_path, '.DS_Store')
@@ -64,9 +64,7 @@ class CenterDataset(object):
 
             # Extracting patches' centers
             patch_centers = utils.center_extraction(center,
-                                                    coords,
-                                                    arg.patch_size,
-                                                    arg.heatmap_size)
+                                                    coords)
 
             # Finding epsilon and heatmaps
             h_map, epsilon = utils.heat_map(patch_centers,

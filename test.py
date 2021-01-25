@@ -5,38 +5,16 @@ from PIL import Image
 from numpy import asarray
 import other.utils as utils
 from model.SC_CNN import SC_CNN
+from matplotlib import pyplot as plt
 from model.SC_CNN_v2 import SC_CNN_v2
-from other.ColorNormalization import steinseperation
-
-
-
-
-def print_values(img, model, arg):
-
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    img_transform = utils.transform(arg.version)
-    img = img_transform(np.uint8(img))
-    img = img.float()
-
-    img = img.to(device)
-
-    img = img.unsqueeze(0)
-    model.train(False)
-
-    point, h = model(img)
-    print('points     :', point.cpu().detach().numpy().reshape((-1, 2)))
-    print('H          :', h.cpu().detach().numpy().reshape((-1, 1)))
-    print(20*'*')
-
-    return utils.heat_map_tensor(point.view(-1, 2), h.view(-1, 1),
-                                 device, arg.d, arg.heatmap_size)
+from other.functions import test_model
+from postprocess.postprocess import postprocess
 
 
 
 def test(arg):
 
-    root = os.path.realpath(__file__)[:-7]
+    root = os.path.dirname(os.path.realpath(__file__))
 
     if arg.version==0 or arg.version==1:
         # get the original model
@@ -57,38 +35,19 @@ def test(arg):
     model.to(device)
 
      # load model
-    _, _, model, _, _ = utils.load_model(arg.load_flag, root+arg.load_name, model,
-                                         None, None)
+    _, _, model, _, _ = utils.load_model(arg.load_name,
+                                         model,
+                                         None,
+                                         None)
+    path = '/Datasets/121095_31096.png'
+    # path = '/Datasets/CRCHistoPhenotypes_2016_04_28/Tissue_Images/img1.bmp'
+    image_path = os.path.join(root + path)
+    data = asarray(Image.open(image_path))
 
-    image = Image.open(os.path.join(root + '/Datasets/CRCHistoPhenotypes_2016_04_28/Tissue Images/img1.png'))
-    data = asarray(image)
+    cell = test_model(image_path, data, model, arg)
+    cell = postprocess(cell, dist=8, thresh=0.3)
 
-    _, _, _, stain, _ = steinseperation.stainsep(data, 2, 0.02)
-    H_Channel = stain[0]
-
-    cropped, coords = utils.patch_extraction(data, H_Channel, arg.patch_size,
-                                             arg.stride_size, arg.version)
-
-    H, W, _ = data.shape
-    cell = np.zeros((H, W))
-    count = np.zeros((H, W))
-
-    [H_prime, W_prime] = arg.heatmap_size
-
-    for img, coord in zip(cropped, coords):
-
-        heat_map = print_values(img, model, arg)
-        heatmap  = heat_map.cpu().detach().numpy().reshape((H_prime, W_prime))
-
-        start_H, end_H, start_W, end_W = utils.find_out_coords(coord, arg.patch_size,
-                                                               arg.heatmap_size)
-
-        cell[start_H:end_H, start_W:end_W] += heatmap
-
-        idx = np.argwhere(heatmap != 0)
-        count[idx[:,0]+start_H, idx[:,1]+start_W] += 1
-
-    count[count==0] = 1
-    cell = np.divide(cell, count)
-
-    return cell
+    print(f"{len(cell)} cells are detected!")
+    plt.imshow(data, interpolation='nearest')
+    plt.scatter(cell[:,0], cell[:,1], c='r', s=2)
+    plt.show()
