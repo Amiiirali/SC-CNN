@@ -41,6 +41,9 @@ def parse_input():
     parser.add_argument('--batch_size', type=int, default=64, required=False,
                         help="""The Batch Size!""")
 
+    parser.add_argument('--num_workers', type=int, default=4, required=False,
+                        help="""The number of workers!""")
+
     parser.add_argument('--M', type=int, default=1, required=False,
                         help="""Maximum Number of Center in each patch!""")
 
@@ -50,20 +53,25 @@ def parse_input():
     parser.add_argument('--lr', type=float, default=0.001, required=False,
                         help="""Learnin Rate!""")
 
-    parser.add_argument('--epoch', type=int, default=100, required=False,
+    parser.add_argument('--epochs', type=int, default=100, required=False,
                         help="""Epoch Number!""")
 
     parser.add_argument('--gpu', type=int, default=[0], nargs='+', help="""Used
                         gpu""")
 
-    parser.add_argument('--save_name', type=str, default='CellPoint.pt', help=""
+    parser.add_argument('--save', type=str, default='CellPoint.pt', help=""
                         "Name of the saved weights""")
 
-    parser.add_argument('--load_name', type=str, help=""
+    parser.add_argument('--load', type=str, help=""
                         "Name of the loaded weights""")
 
     parser.add_argument('--log_dir', type=str, help=""
                         "Name of the directory of logs""")
+
+    parser.add_argument('--auto_grad', type=str, default='PyTorch', help=""
+                        "the gradient calculated by Amirali's implementation or PyTorch""")
+    parser.add_argument('--verbose', action='store_true', default=False)
+
 
     args = parser.parse_args()
 

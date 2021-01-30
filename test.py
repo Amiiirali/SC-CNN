@@ -39,8 +39,8 @@ def test(arg):
                                          model,
                                          None,
                                          None)
-    path = '/Datasets/121095_31096.png'
-    # path = '/Datasets/CRCHistoPhenotypes_2016_04_28/Tissue_Images/img1.bmp'
+    path = '/Datasets/71760_77740.png'
+    # path = '/Datasets/CRCHistoPhenotypes_2016_04_28/Tissue_Images/img100.bmp'
     image_path = os.path.join(root + path)
     data = asarray(Image.open(image_path))
 

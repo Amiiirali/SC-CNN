@@ -17,9 +17,9 @@ class BCE_Loss(torch.autograd.Function):
     '''
 
     @staticmethod
-    def forward(ctx, x, y, weight):
+    def forward(ctx, x, y):
 
-        ctx.save_for_backward(x, y, weight)
+        ctx.save_for_backward(x, y)
 
         #######
         # PyTorch version
@@ -41,7 +41,6 @@ class BCE_Loss(torch.autograd.Function):
         clamp_log_1_x = torch.log(1-x+eps)
 
         loss = -y * clamp_log_x - (1-y) * clamp_log_1_x
-        loss = loss * weight
 
         return loss
 
@@ -49,7 +48,7 @@ class BCE_Loss(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
 
-        x, y, weight = ctx.saved_tensors
+        x, y = ctx.saved_tensors
 
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -72,6 +71,5 @@ class BCE_Loss(torch.autograd.Function):
         temp_1_x = 1 / (1-x+eps)
 
         dloss_dx = -y * temp_x + (1-y) * temp_1_x
-        dloss_dx = weight * dloss_dx
 
-        return dloss_dx, None, None
+        return dloss_dx, None

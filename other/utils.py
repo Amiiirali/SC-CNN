@@ -153,7 +153,7 @@ def read_center_txt(text_file):
     return centers
 
 
-def find_out_coords(coord, patch_size, out_size):
+def find_out_center_coords(coord, patch_size, out_size):
 
     '''
     This function determines the coordinates of output's window. This window is
@@ -185,8 +185,8 @@ def find_out_coords(coord, patch_size, out_size):
     start_H  = int(coord[0][0] + margin_H); start_W  = int(coord[0][1] + margin_W)
     end_H    = start_H + H_prime          ; end_W    = start_W + W_prime
 
-    assert end_H < coord[1][0] or end_W < coord[1][1], "H --> End: {} Coord: {} W --> End: {} Coord: {}".format(end_H, coord[1][0], end_W, coord[1][1])
-    assert start_H > coord[0][0] or start_W > coord[0][1], "H --> Start: {} Coord: {} W --> Start: {} Coord: {}".format(start_H, coord[0][0], start_W, coord[0][1])
+    assert end_H < coord[1][0] or end_W < coord[1][1], f"H --> End: {end_H} Coord: {coord[1][0]} W --> End: {end_W} Coord: {coord[1][1]}"
+    assert start_H > coord[0][0] or start_W > coord[0][1], f"H --> Start: {start_H} Coord: {coord[0][0]} W --> Start: {start_W} Coord: {coord[0][1]}"
 
     return start_H, end_H, start_W, end_W
 
@@ -201,20 +201,17 @@ def center_extraction(centers, coords):
     ** Update: The center should be in [27*27] not [11*11] **
 
     Input:
-          1- coord:
+          1- centers:
+                Coordinates of centers.
+          2- coord:
                 Coordinates of the Patch.It should be in this format: [[start_x, start_y]
                                                                        [end_x  , end_y  ]]
-          2- patch_size:
-                Size of patches. It should be in this format: [p_h, p_w]
-          3- out_size:
-                Size of output map. It should be in this format: [o_h, o_w]
-
           Note: This formats are for one data. The input of this function is
                 list of these points.
 
     Output:
-          1- centers:
-                Coordinates of centers.
+          1- patch_centers
+
     '''
 
     patch_centers = list()
@@ -273,18 +270,16 @@ def heat_map(patch_centers, coords, d, patch_size, out_size):
           value for each patch, I can easily change here.
     '''
 
-    maps = list()
-
-    # epsilon = list()
+    maps    = list()
     epsilon = 0
 
-    H_prime, W_prime = out_size[0]  , out_size[1]
+    H_prime, W_prime = out_size[0], out_size[1]
 
     for idx, coord in enumerate(coords):
 
-        start_H, end_H, start_W, end_W = find_out_coords(coord,
-                                                         patch_size,
-                                                         out_size)
+        start_H, end_H, start_W, end_W = find_out_center_coords(coord,
+                                                                patch_size,
+                                                                out_size)
         if len(patch_centers[idx]) == 0:
             out = np.zeros((H_prime, W_prime))
             eps = 0
@@ -295,11 +290,10 @@ def heat_map(patch_centers, coords, d, patch_size, out_size):
             Xtrain = np.array(Xtrain).astype(int)
 
             Xtest = np.zeros((len(patch_centers[idx]), 2))
-
             for i, point in enumerate(patch_centers[idx]):
                 Xtest[i, :] = point
-
             Xtest = Xtest.astype(int)
+
             distance = euclidean_dist_squared(Xtrain, Xtest)
 
             # out = np.min(distance, axis=1)
@@ -498,81 +492,49 @@ def save_model(epoch, model, optimizer, scheduler, val_loss, save_name):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
                 'loss'                : val_loss
-                }, f"{save_name}+.pt")
+                }, f"{save_name}.pt")
 
     print('\n**********************************')
     print('* Finding Better Model --> Save  *')
     print('**********************************\n')
 
 
-def load_model(load_path, model, optimizer, scheduler):
+def load_model(checkpoint):
 
     '''
     This function loads the previous best model.
 
     Input:
-          1- load_flag:
+          1- checkpoint:
                 Flag that determines if we want to load or not.
-          2- model:
-                Basic model.
-          3- load_path:
-                Path of best model.
 
     Output:
-          1- model:
-                Model with loaded values.
-          2- start_epoch:
-                Epochs number.
-          3- best_loss:
-                Validation loss of previous model.
+          1- loaded_checkpoint:
     '''
+    # If the model is trained on DataParallel, it has mudole. on Weights
+    # so first check if every weight  has this name, then remove it.
+    flag = True
+    loaded_checkpoint = OrderedDict()
 
-    if load_path is not None:
-        if torch.cuda.is_available():
-            checkpoint = torch.load(load_path)
+    for k, v in checkpoint['model_state_dict'].items():
+        # name = k[:7]
+        # if name!='module.':
+        if 'module.' in k:
+            flag=False
 
-        else:
-            checkpoint = torch.load(load_path, map_location='cpu')
-
-        # If the model is trained on DataParallel, it has mudole. on Weights
-        # so first check if every weight  has this name, then remove it.
-        flag = True
-        loaded_checkpoint = OrderedDict()
-
+    if not flag and torch.cuda.device_count() <= 1:
         for k, v in checkpoint['model_state_dict'].items():
-            # name = k[:7]
-            # if name!='module.':
-            if 'module.' in k:
-                flag=False
+            name = k.replace('module.', '') # remove 'module.' of dataparallel
+            loaded_checkpoint[name] = v
 
-        if not flag and torch.cuda.device_count() <= 1:
-            for k, v in checkpoint['model_state_dict'].items():
-                name = k.replace('module.', '') # remove 'module.' of dataparallel
-                loaded_checkpoint[name] = v
-
-        elif flag and torch.cuda.device_count() > 1:
-            for k, v in checkpoint['model_state_dict'].items():
-                name = 'module.' + k
-                loaded_checkpoint[name] = v
-        else:
-            loaded_checkpoint = checkpoint['model_state_dict']
-
-        model.load_state_dict(loaded_checkpoint)
-
-        if optimizer!=None and scheduler!=None:
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-
-        start_epoch = checkpoint['epoch'] + 1
-        best_loss   = checkpoint['loss']
-
-        print('Model Loaded!')
-
+    elif flag and torch.cuda.device_count() > 1:
+        for k, v in checkpoint['model_state_dict'].items():
+            name = 'module.' + k
+            loaded_checkpoint[name] = v
     else:
-        best_loss   = 10**10
-        start_epoch = 0
+        loaded_checkpoint = checkpoint['model_state_dict']
 
-    return start_epoch, best_loss, model, optimizer, scheduler
+    return loaded_checkpoint
 
 
 def transform(version):
@@ -589,13 +551,11 @@ def transform(version):
     if version==0:
         mean = [221.33406856/255]
         std  = [41.27528366028781/255]
-
     # H-channel     --> 3 channel
     if version==1:
         mean = [ 235.0879146/255, 214.99023836/255, 224.9764618/255]
         std  = [ 27.183979045443454/255, 46.98090325856224/255,
                                       37.483731754364285/255]
-
     # Gray H-channel + img     --> 4 channel
     if version==2:
         mean = [221.33406856/255, 218.48473032/255, 179.33441576/255,
