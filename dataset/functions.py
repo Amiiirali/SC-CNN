@@ -1,4 +1,4 @@
-fimport os
+import os
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -38,6 +38,19 @@ def process(name, root, image_dir, center_dir, stain_dir):
     H_Channel         = stain[0]
 
     stain_path = os.path.join(stain_dir, name + '_stain.png')
+    cv2.imwrite(stain_path, H_Channel)
+
+def testprocess(name, root, image_dir, center_dir, stain_dir):
+
+    image_path = os.path.join(root, name)
+    # Obtaining H-Channel
+    # Vahadane color normalization --> my implementation
+    # of Matlab's version
+    _, _, _, stain, _ = steinseperation.stainsep(image_path, 2, 0.02)
+    H_Channel         = stain[0]
+
+
+    stain_path = os.path.join(stain_dir, os.path.splitext(name)[0] + '_stain.png')
     cv2.imwrite(stain_path, H_Channel)
 
 def divide_task_for_multiprocess(num_process, names, roots, image_dir_path,
@@ -124,6 +137,49 @@ def load_dataset(num_process, dataset_dir, main_path, image_path, center_path,
 
             pool.starmap(process, tasks[idx])
 
+def load_test_dataset(num_process, dataset_dir, main_path, image_path, center_path,
+                      stain_path):
+
+    image_dir_path  = os.path.join(dataset_dir, image_path)
+    center_dir_path = os.path.join(dataset_dir, center_path)
+    stain_dir_path  = os.path.join(dataset_dir, stain_path)
+    main_dir_path   = os.path.join(dataset_dir, main_path)
+
+    # if not, create it
+    if not os.path.isdir(image_dir_path)  or \
+       not os.path.isdir(center_dir_path) or \
+       not os.path.isdir(stain_dir_path):
+
+        os.mkdir(image_dir_path)
+        os.mkdir(center_dir_path)
+        os.mkdir(stain_dir_path)
+
+    names, roots = list(), list()
+
+    for file in os.listdir(main_path):
+
+        if file in os.listdir(image_dir_path):
+            continue
+
+        copy(os.path.join(main_path, file), image_dir_path)
+        names.append(file)
+        roots.append(main_path)
+
+    tasks = divide_task_for_multiprocess(num_process,
+                                         names,
+                                         roots,
+                                         image_dir_path,
+                                         center_dir_path,
+                                         stain_dir_path)
+
+    with Pool(processes=num_process) as pool:
+
+        n_work = len(tasks)
+        prefix = 'Data Processing'
+
+        for idx in tqdm(range(0, n_work), desc=prefix, dynamic_ncols=True):
+
+            pool.starmap(testprocess, tasks[idx])
 
 def download_dataset(url, path):
 

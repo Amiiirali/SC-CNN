@@ -16,12 +16,20 @@ dataset_path = 'Datasets'
 #######################################
 
 train_path 	   = 'CRCHistoPhenotypes_2016_04_28'
-image_path	   = os.path.join(train_path, 'Tissue_Images')
-center_path    = os.path.join(train_path, 'Center_Points')
-stain_path	   = os.path.join(train_path, 'Stain')
+
+# image_path	   = os.path.join(train_path, 'Tissue_Images')
+# center_path    = os.path.join(train_path, 'Center_Points')
+# stain_path	   = os.path.join(train_path, 'Stain')
+image_path	   = 'Tissue_Images'
+center_path    = 'Center_Points'
+stain_path	   = 'Stain'
+
 detection_path = os.path.join(train_path, 'Detection')
 
 
 #######################################
 ############### Test ##################
 #######################################
+image_path	   = 'Tissue_Images'
+center_path    = 'Center_Points'
+stain_path	   = 'Stain'

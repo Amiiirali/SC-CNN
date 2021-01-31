@@ -47,7 +47,7 @@ class Train(object):
 
     def data_loader(self):
 
-        self.logger.info(f'Loading the Dataset:')
+        self.logger.info(f'Loading the Dataset ...')
         dataset = CenterDataset(self.root, self.arg)
         # split the dataset in train and valid set
         torch.manual_seed(1)
@@ -75,15 +75,16 @@ class Train(object):
             'Train'     : len(dataset_train),
             'Validation': len(dataset_valid)}
 
-        self.logger.info(f'Total number of data is {len(dataset)}, where {len(dataset_train)} \
-                    are training patches, and {len(dataset_valid)} is validation patches.')
+        self.logger.info(f'Finished Loading the Dataset.')
+        self.logger.info(f"Total number of patches are {len(dataset)}, where {len(dataset_train)} "
+                         f"ones are training, and {len(dataset_valid)} ones are validation.")
 
     def model_configuration(self):
 
         self.SC_CNN = Model(self.arg, self.logger)
         self.SC_CNN.initialize()
         self.SC_CNN.load_()
-        print('Summary of the Model:')
+        # print('Summary of the Model:')
         # summary(self.SC_CNN.model, (self.dataset[0])[0].shape)
 
     def training_validation(self):

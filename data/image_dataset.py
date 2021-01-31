@@ -29,6 +29,7 @@ class CenterDataset(object):
         self.transform = utils.transform(arg.version)
 
         self.dataset_dir = os.path.join(root, cfg.dataset_path)
+        self.dataset_dir = os.path.join(self.dataset_dir, 'Train')
         self.Image_path  = os.path.join(self.dataset_dir, cfg.image_path)
         self.Center_path = os.path.join(self.dataset_dir, cfg.center_path)
         self.Stain_path  = os.path.join(self.dataset_dir, cfg.stain_path)

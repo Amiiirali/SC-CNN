@@ -70,8 +70,12 @@ def parse_input():
 
     parser.add_argument('--auto_grad', type=str, default='PyTorch', help=""
                         "the gradient calculated by Amirali's implementation or PyTorch""")
-    parser.add_argument('--verbose', action='store_true', default=False)
 
+    parser.add_argument('--verbose', action='store_true', default=False, help=""
+                        "Print batch loss""")
+
+    parser.add_argument('--test_dir', type=str, help=""
+                        "path to test folder images""")
 
     args = parser.parse_args()
 

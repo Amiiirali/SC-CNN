@@ -24,7 +24,7 @@ if __name__ == "__main__":
     arg = parse_input()
 
     # Download dataset
-    dataset()
+    dataset(arg)
 
     if arg.mode == 'train':
         train = Train(arg)
