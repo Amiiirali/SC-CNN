@@ -76,5 +76,5 @@ def postprocess(proximity, dist=8, thresh=0.3, radius=2):
         else:
             break
 
-    candidates[:,[0,1]] = candidates[:,[1,0]]
+    # candidates[:,[0,1]] = candidates[:,[1,0]]
     return candidates

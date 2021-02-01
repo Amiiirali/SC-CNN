@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 import other.utils as utils
 from model.SC_CNN import SC_CNN
-from matplotlib import pyplot as plt
 from model.SC_CNN_v2 import SC_CNN_v2
 from postprocess.postprocess import postprocess
 from data.image_dataset import TestDataset
@@ -99,20 +98,3 @@ class Test(object):
             center_name = os.path.splitext(file)[0] + '.txt'
             path = f"{self.root}/{cfg.dataset_path}/Test/{cfg.center_path}/{center_name}"
             utils.save_cells(cell, path)
-
-
-
-# def test(arg):
-#
-#     path = '/Datasets/71760_77740.png'
-#     # path = '/Datasets/CRCHistoPhenotypes_2016_04_28/Tissue_Images/img100.bmp'
-#     image_path = os.path.join(root + path)
-#     data = asarray(Image.open(image_path))
-#
-#     cell = test_model(image_path, data, model, arg)
-#
-#
-#     print(f"")
-#     plt.imshow(data, interpolation='nearest')
-#     plt.scatter(cell[:,0], cell[:,1], c='r', s=2)
-#     plt.show()
