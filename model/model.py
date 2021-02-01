@@ -4,6 +4,8 @@ from loss.loss import BCE_Loss
 from model.SC_CNN import SC_CNN
 from model.HeatMap import HeatMap
 from model.SC_CNN_v2 import SC_CNN_v2
+import other.utils as utils
+
 
 
 class Model(object):

@@ -147,7 +147,6 @@ def read_center_txt(text_file):
 
         numbers = line[1:-1].split(',')
         x = int(float(numbers[0])) ; y = int(float(numbers[1]))
-        # centers[idx][0] = x ; centers[idx][1] = y
         centers[idx][0] = y ; centers[idx][1] = x
 
     return centers
@@ -570,3 +569,9 @@ def transform(version):
         transforms.Normalize(mean=mean,
                              std=std)
     ])
+
+def save_cells(cells, path):
+
+    with open(path, 'w') as f:
+        for cell in cells:
+            f.write(f"{(int(cell[0]), int(cell[1]))}\n")
