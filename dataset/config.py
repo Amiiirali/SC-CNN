@@ -33,3 +33,10 @@ detection_path = os.path.join(train_path, 'Detection')
 image_path	   = 'Tissue_Images'
 center_path    = 'Center_Points'
 stain_path	   = 'Stain'
+
+
+
+#######################################
+############### Hdf5 ##################
+#######################################
+hdf5_name = 'Train_Dataset'

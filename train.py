@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision
-
+import psutil
 from torchsummary import summary
 import os
 import logging
@@ -60,12 +60,14 @@ class Train(object):
         train_data_loader = torch.utils.data.DataLoader(dataset_train,
                                                         batch_size=self.batch_size,
                                                         shuffle=True,
-                                                        num_workers=self.num_workers)
+                                                        num_workers=self.num_workers,
+                                                        pin_memory=True)
 
         valid_data_loader = torch.utils.data.DataLoader(dataset_valid,
                                                         batch_size=self.batch_size,
                                                         shuffle=True,
-                                                        num_workers=self.num_workers)
+                                                        num_workers=self.num_workers,
+                                                        pin_memory=True)
 
         self.dataLoaders   = {
             'Train'     : train_data_loader,
@@ -144,9 +146,10 @@ class Train(object):
 
                     end_batch = time.time()
                     if self.verbose:
-                        print(f"""{phase}: epoch {epoch}: batch {batch_idx+1}/{int(np.ceil(self.dataset_sizes[phase]/self.batch_size))}:
-                              {end_batch-start_batch} s {self.batch_size/(end_batch-start_batch)} data/s
-                              obj: {running_loss/((batch_idx+1)*self.batch_size)}-> Loss: {loss.item()}""".replace('\n',''), flush=True)
+                        print(f"{phase}: epoch {epoch}: batch {batch_idx+1}/{int(np.ceil(self.dataset_sizes[phase]/self.batch_size))}:"
+                              f"{end_batch-start_batch:3f} s {self.batch_size/(end_batch-start_batch):3f} data/s"
+                              f"obj: {running_loss/((batch_idx+1)*self.batch_size):3f}-> Loss: {loss.item():3f}", flush=True)
+                        print("RAM: ", psutil.virtual_memory().percent)
 
                     # Empty Catch
                     torch.cuda.empty_cache()
