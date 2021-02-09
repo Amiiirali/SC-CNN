@@ -15,6 +15,7 @@
 In this code, we try to implement the [Locality Sensitive Deep Learning for Detection and Classification of Nuclei in Routine Colon Cancer Histology Images](https://ieeexplore.ieee.org/document/7399414).
 
 Note: We are updating the codes. It is not complete, and for this phase, the first part `SC-CNN` is implemented.
+Thanks Profs. Rajpoot and Ahmed Raza for helping on the code.
 
 ### Dataset
 
@@ -45,17 +46,30 @@ You can see the parser arguments with:
 
 `python /path/to/main.py -h`
 
-The structure of model is written is 3 versions. 
-In version `0`, which is the same as one in the paper, takes the gray image of H-channel as input. In version `1`, the only difference with the version 0 is that it takes the RGB image of H-channel as input. 
-The version `2` is completely different. The input has 4 channels which consists of gray image of H-channel + RGB image of H&E slides. Also, in this version, all the layers are convolutional ones. For training, you can run:
+The structure of model is written is 3 versions:
+1. In version `0`, which is the same as one in the paper, takes the gray image of H-channel as input. 
+2. In version `1`, the only difference with the version 0 is that it takes the RGB image of H-channel as input. 
+3. Version `2` is completely different. The input has 4 channels which consists of gray image of H-channel + RGB image of H&E slides. Also, in this version, all the layers are convolutional ones. For training, you can run:
 
-`python /path/to/main.py --patch_size PATCH_SIZE --stride_size STRIDE_SIZE --heatmap_size HEATMAP_SIZE --mode train --batch_size BATCH_SIZE --version VERSION_NUMBER --save_name NAME_SAVING`
+`python /path/to/main.py --patch_size PATCH_SIZE --stride_size STRIDE_SIZE --heatmap_size HEATMAP_SIZE --mode train --batch_size BATCH_SIZE --version VERSION_NUMBER --save NAME_SAVING --log_dir LOG_DIR --epoch NUM_EPOCH --num_worker NUM_WORKER`
 
 #### Testing
 
-As we are in the developing phase, the testing is not complete, and it just test on the first image. You can run in the testing phase by setting the `mode`. For testing, you can run:
+For testing, you need to determine the weights and a directory where the images are located. The model will predict cells for each image.
 
-`python /path/to/main.py --patch_size PATCH_SIZE --stride_size STRIDE_SIZE --heatmap_size HEATMAP_SIZE --mode test --version VERSION_NUMBER --load_flag --load_name NAME_SAVED_WEIGHT.pt`
+`python /path/to/main.py --patch_size PATCH_SIZE --stride_size STRIDE_SIZE --heatmap_size HEATMAP_SIZE --mode test --version VERSION_NUMBER --load NAME_SAVED_WEIGHT.pt --num_worker NUM_WORKER --test_dir IMAGES_DIR`
+
+The calculated centers of cells will be placed in `Datasets/Test/Center_Points` directory.
+
+#### Visualization
+
+For visualizing the predicted cells, you could run `visulize_cells.py`.
+
+`python /path/to/visulize_cells.py --image PATH_TO_IMAGE --center PATH_TO_CALCULATED_CENTER --label PATH_TO_TRUE_CENTER`
+
+The third argument (label) is not necessary, and it will show the true centers (annotated) of cells.
+The blue dots are true centers, and red ones are predicted.
+<img src="Images/predicted_cells.png" height=450 alt="Angular"/>
 
 
 ## Prerequisites
